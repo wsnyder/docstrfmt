@@ -226,6 +226,38 @@ def test_nested_enumerated_in_bullet_list_restarts_each_item(runner):
     assert result.output == source
 
 
+def test_inline_literal_not_wrapped(runner):
+    """An inline literal preserves whitespace literally, so the wrapper must not
+    break inside it."""
+    source = (
+        "- Accessing any other internal stuff, including\n"
+        "  ``/* vvvvvvvvv ppppppppppppp */`` items\n"
+    )
+    result = runner.invoke(main, args=["-l", 60, "-"], input=source)
+    assert result.exit_code == 0
+    assert result.output == (
+        "- Accessing any other internal stuff, including\n"
+        "  ``/* vvvvvvvvv ppppppppppppp */`` items\n"
+    )
+    # Even when the literal alone exceeds the width it stays intact.
+    narrow = runner.invoke(main, args=["-l", 40, "-"], input=source)
+    assert narrow.exit_code == 0
+    assert "``/* vvvvvvvvv ppppppppppppp */``\n" in narrow.output
+
+
+def test_inline_literal_source_newline_collapsed(runner):
+    """A literal whose source already spans two lines is parsed by docutils with a
+    bare newline (rendered as a space); it must be re-emitted on one line so the
+    continuation is not left without list/paragraph indentation."""
+    source = "- Fix the ``.. code::`` to ``..\n  code-block::`` form for clarity here\n"
+    result = runner.invoke(main, args=["-"], input=source)
+    assert result.exit_code == 0
+    assert (
+        result.output
+        == "- Fix the ``.. code::`` to ``.. code-block::`` form for clarity here\n"
+    )
+
+
 def test_encoding(runner):
     file = "tests/test_files/test_encoding.rst"
     args = [file]

@@ -11,6 +11,10 @@
 - Added command-line option ``--indent-width`` (4 as default) to control
   spaces per indent level.
 
+**Fixed**
+
+- Fixed line wrapping breaking inside inline literals (``\`\`...\`\```).
+
 ********************
  2.1.1 (2026/06/12)
 ********************

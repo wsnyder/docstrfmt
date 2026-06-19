@@ -81,9 +81,9 @@ Results in:
 Inside paragraphs and other bodies of text, you may additionally mark text for *italics*
 with "``*italics*``" or **bold** with "``**bold**``". This is called "inline markup".
 
-If you want something to appear as a fixed-space literal, use "````double
-back-quotes````". Note that no further fiddling is done inside the double back-quotes --
-so asterisks "``*``" etc. are left alone.
+If you want something to appear as a fixed-space literal, use
+"````double back-quotes````". Note that no further fiddling is done inside the double
+back-quotes -- so asterisks "``*``" etc. are left alone.
 
 If you find that you want to use one of the "special" characters in text, it will
 generally be OK -- reStructuredText is pretty smart. For example, this lone asterisk *

@@ -124,13 +124,15 @@ class UnknownNodeTransformer(Transform):
 class inline_markup:
     """An inline markup block."""
 
-    def __init__(self, text: str) -> None:
+    def __init__(self, text: str, atomic: bool = False) -> None:
         """Initialize the inline markup block.
 
         :param text: The text content of the markup.
+        :param atomic: Must not split across lines.
 
         """
         self.text = text
+        self.atomic = atomic
 
 
 inline_item = str | inline_markup
@@ -1670,12 +1672,18 @@ class Formatters:
             # When the node ends with a backslash followed by a space or new line, don't
             # remove the :literal: role and just return the node untouched. This is a
             # workaround for specific edge cases in docutils.
-            yield inline_markup(node.rawsource)
+            yield inline_markup(node.rawsource, atomic=True)
             return
 
-        yield inline_markup(
-            f"``{''.join(chain(self._format_children(node, context)))}``"
+        # Inline literals are emitted on a single line (see ``atomic`` below).
+        # A source line break inside the literal is parsed by docutils as a bare
+        # newline (the continuation indent is stripped) and rendered as a single
+        # space, so collapse it to a space here. Multiple spaces within a line are
+        # significant and left untouched.
+        content = "".join(chain(self._format_children(node, context))).replace(
+            "\n", " "
         )
+        yield inline_markup(f"``{content}``", atomic=True)
 
     @staticmethod
     def literal_block(
@@ -2431,10 +2439,13 @@ def _wrap_text(
                     if item[-1] in pre_markup_break_chars:
                         new_words[-1] = new_words[-1]._replace(end_punct=True)
         elif isinstance(item, inline_markup):
-            new_words = [
-                word_info(word, True, False, False, False, False)
-                for word in item.text.split()
-            ]
+            if item.atomic:
+                new_words = [word_info(item.text, True, False, False, False, False)]
+            else:
+                new_words = [
+                    word_info(word, True, False, False, False, False)
+                    for word in item.text.split()
+                ]
         raw_words.append(new_words)
     raw_words = list(chain(raw_words))
     words = [word_info("", False, True, True, True, True)]
